@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: food_delivery_db
+      MYSQL_USER: foodapp
+      MYSQL_PASSWORD: foodpass
+      MYSQL_ROOT_PASSWORD: localrootpass
+    ports: ["3306:3306"]
+    volumes: ["mysql_data:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-plocalrootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://foodapp:foodpass@db:3306/food_delivery_db?charset=utf8mb4
+      JWT_SECRET_KEY: local-docker-change-this-secret
+      START_SCHEDULER: "true"
+    ports: ["8000:8000"]
+volumes:
+  mysql_data:
